@@ -5,7 +5,7 @@ async function main() {
      * Connection URI. Update <username>, <password>, and <your-cluster-url> to reflect your cluster.
      * See https://docs.mongodb.com/drivers/node/ for more details
      */
-    const uri = "mongodb+srv://<username>:<password>@<your-cluster-url>/sample_airbnb?retryWrites=true&w=majority";
+    const uri = "mongodb+srv://JD:%atlas2022@cluster0/sample_airbnb?retryWrites=true&w=majority";
     
     /**
      * The Mongo Client you will use to interact with your database
@@ -16,14 +16,23 @@ async function main() {
      */
     const client = new MongoClient(uri);
 
+    
+
     try {
         // Connect to the MongoDB cluster
         await client.connect();
 
         // Make the appropriate DB calls
 
-    } finally {
+         // Print the 10 cheapest suburbs in the Sydney, Australia market
+         await printCheapestSuburbs(client, "Australia", "Sydney", 10);
+
+    } 
+    
+    finally {
+
         // Close the connection to the MongoDB cluster
+
         await client.close();
     }
 }
@@ -34,56 +43,56 @@ main().catch(console.error);
 
 async function printCheapestSuburbs(client, country, market, maxNumberToPrint) {
 
-    const pipeline = [];
+    const pipeline = [
+      {
+        '$match': {
+           'bedrooms': 1, 
+           'address.country': 'country', 
+           'address.market': 'market', 
+           'address.suburb': {
+             '$exists': 1, 
+             '$ne': ''
+           }, 
+           'room_type': 'Entire home/apt'
+          }
+       }, {
+         '$group': {
+            '_id': '$address.suburb', 
+            'averagePrice': {
+              '$avg': '$price'
+            }
+          }
+       }, {
+         '$sort': {
+           'averagePrice': 1
+          }
+       }, {
+         '$limit': maxNumberToPrint
+       }
+    ];
      
 const aggCursor = client.db("sample_airbnb")
                         .collection("listingsAndReviews")
                         .aggregate(pipeline);
 
+                        await aggCursor.forEach(airbnbListing => {
+                          console.log(`${airbnbListing._id}: ${airbnbListing.averagePrice}`);
+                        });                     
+
 }
 
 
-//export
-
-const pipeline = [
-    {
-      '$match': {
-         'bedrooms': 1, 
-         'address.country': 'country', 
-         'address.market': 'market', 
-         'address.suburb': {
-           '$exists': 1, 
-           '$ne': ''
-         }, 
-         'room_type': 'Entire home/apt'
-        }
-     }, {
-       '$group': {
-          '_id': '$address.suburb', 
-          'averagePrice': {
-            '$avg': '$price'
-          }
-        }
-     }, {
-       '$sort': {
-         'averagePrice': 1
-        }
-     }, {
-       '$limit': maxNumberToPrint
-     }
-  ];
-
- // Call the Function
 
 
-  await aggCursor.forEach(airbnbListing => {
-    console.log(`${airbnbListing._id}: ${airbnbListing.averagePrice}`);
-  });
+  
 
 
 
-  //Running aggregation.js results in the following 
+ 
 
+
+
+  
 
   /*
   
@@ -102,36 +111,7 @@ Neutral Bay: 119.00
   
 
 
-  /*
-
-  const agg = [
-    {
-      '$match': {
-        'bedrooms': 1, 
-        'address.country': 'Australia', 
-        'address.market': 'Sydney', 
-        'address.suburb': {
-          '$exists': 1, 
-          '$ne': ''
-        }, 
-        'room_type': 'Entire home/apt'
-      }
-    }, {
-      '$group': {
-        '_id': '$address.suburb', 
-        'averagePrice': {
-          '$avg': '$price'
-        }
-      }
-    }, {
-      '$sort': {
-        'averagePrice': 1
-      }
-    }, {
-      '$limit': 10
-    }, {}
-  ];
-  
+  /* 
   MongoClient.connect(
     '',
     { useNewUrlParser: true, useUnifiedTopology: true },
