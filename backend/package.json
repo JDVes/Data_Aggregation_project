@@ -1,0 +1,14 @@
+{
+  "name": "g",
+  "version": "1.0.0",
+  "description": "",
+  "main": "aggregation.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "node": "^16.17.0"
+  }
+}
